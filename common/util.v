@@ -5,123 +5,99 @@
 `define util_v
 
 `define CLOG2(x) \
-   x <= 2	 ? 1 : \
-   x <= 4	 ? 2 : \
-   x <= 8	 ? 3 : \
-   x <= 16	 ? 4 : \
-   x <= 32	 ? 5 : \
-   x <= 64	 ? 6 : \
-   x <= 128	 ? 7 : \
-   x <= 256	 ? 8 : \
-   x <= 512	 ? 9 : \
-   x <= 1024	 ? 10 : \
-   x <= 2048	 ? 11 : \
-   x <= 4096	 ? 12 : \
-   x <= 8192	 ? 13 : \
-   x <= 16384	 ? 14 : \
-   x <= 32768	 ? 15 : \
-   x <= 65536	 ? 16 : \
+   x <= 2  ? 1 : \
+   x <= 4  ? 2 : \
+   x <= 8  ? 3 : \
+   x <= 16   ? 4 : \
+   x <= 32   ? 5 : \
+   x <= 64   ? 6 : \
+   x <= 128  ? 7 : \
+   x <= 256  ? 8 : \
+   x <= 512  ? 9 : \
+   x <= 1024   ? 10 : \
+   x <= 2048   ? 11 : \
+   x <= 4096   ? 12 : \
+   x <= 8192   ? 13 : \
+   x <= 16384  ? 14 : \
+   x <= 32768  ? 15 : \
+   x <= 65536  ? 16 : \
    -1
 
-function [7:0] hexdigit;
-	input [3:0] x;
-	begin
-		hexdigit =
-			x == 0 ? "0" :
-			x == 1 ? "1" :
-			x == 2 ? "2" :
-			x == 3 ? "3" :
-			x == 4 ? "4" :
-			x == 5 ? "5" :
-			x == 6 ? "6" :
-			x == 7 ? "7" :
-			x == 8 ? "8" :
-			x == 9 ? "9" :
-			x == 10 ? "a" :
-			x == 11 ? "b" :
-			x == 12 ? "c" :
-			x == 13 ? "d" :
-			x == 14 ? "e" :
-			x == 15 ? "f" :
-			"?";
-	end
-endfunction
-
 module divide_by_n(
-	input clk,
-	input reset,
-	output reg out
+  input clk,
+  input reset,
+  output reg out
 );
-	parameter N = 2;
+  parameter N = 2;
 
-	reg [`CLOG2(N)-1:0] counter;
+  reg [`CLOG2(N)-1:0] counter;
 
-	always @(posedge clk)
-	begin
-		out <= 0;
+  always @(posedge clk)
+  begin
+    out <= 0;
 
-		if (reset)
-			counter <= 0;
-		else
-		if (counter == 0)
-		begin
-			out <= 1;
-			counter <= N - 1;
-		end else
-			counter <= counter - 1;
-	end
+    if (reset)
+      counter <= 0;
+    else
+    if (counter == 0)
+    begin
+      out <= 1;
+      counter <= N - 1;
+    end else
+      counter <= counter - 1;
+  end
 endmodule
 
 
 module fifo(
-	input clk,
-	input reset,
-	output data_available,
-	input [WIDTH-1:0] write_data,
-	input write_strobe,
-	output [WIDTH-1:0] read_data,
-	input read_strobe
+  input clk,
+  input reset,
+  output data_available,
+  input [WIDTH-1:0] write_data,
+  input write_strobe,
+  output [WIDTH-1:0] read_data,
+  input read_strobe
 );
-	parameter WIDTH = 8;
-	parameter NUM = 256;
+  parameter WIDTH = 8;
+  parameter NUM = 256;
 
-	reg [WIDTH-1:0] buffer[0:NUM-1];
-	reg [`CLOG2(NUM)-1:0] write_ptr;
-	reg [`CLOG2(NUM)-1:0] read_ptr;
+  reg [WIDTH-1:0] buffer[0:NUM-1];
+  reg [`CLOG2(NUM)-1:0] write_ptr;
+  reg [`CLOG2(NUM)-1:0] read_ptr;
 
-	assign read_data = buffer[read_ptr];
-	assign data_available = read_ptr != write_ptr;
+  assign read_data = buffer[read_ptr];
+  assign data_available = read_ptr != write_ptr;
 
-	always @(posedge clk) begin
-		if (reset) begin
-			write_ptr <= 0;
-			read_ptr <= 0;
-		end else begin
-			if (write_strobe) begin
-				buffer[write_ptr] <= write_data;
-				write_ptr <= write_ptr + 1;
-			end
-			if (read_strobe) begin
-				read_ptr <= read_ptr + 1;
-			end
-		end
-	end
+  always @(posedge clk) begin
+    if (reset) begin
+      write_ptr <= 0;
+      read_ptr <= 0;
+    end else begin
+      if (write_strobe) begin
+        buffer[write_ptr] <= write_data;
+        write_ptr <= write_ptr + 1;
+      end
+      if (read_strobe) begin
+        read_ptr <= read_ptr + 1;
+      end
+    end
+  end
 endmodule
 
 
 module pwm(
-	input clk,
-	input [BITS-1:0] bright,
-	output out
+  input clk,
+  input [BITS-1:0] bright,
+  output out
 );
-	parameter BITS = 8;
+  parameter BITS = 8;
 
-	reg [BITS-1:0] counter;
-	always @(posedge clk)
-	begin
-		counter <= counter + 1;
-		out <= counter < bright;
-	end
+  reg [BITS-1:0] counter;
+  always @(posedge clk)
+  begin
+    counter <= counter + 1;
+    out <= counter < bright;
+  end
 
 endmodule
 

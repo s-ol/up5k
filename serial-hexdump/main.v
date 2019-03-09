@@ -1,17 +1,16 @@
 /** \file
- * Demo reading / writing to the single port RAM.
+ * Print a hexdump of the incoming serial data.
  *
  * The up5k has 1024 Kb of single ported block RAM.
  * This is can't read/write simultaneously, so it is necessary to
  * mux the read/write pins.
  *
- * This is another serial demo, but the FIFO is stored in the
- * SPRAM and clocked out slowly to show how much the FIFO can store.
- * If you overflow the FIFO, bad things happen.
+ * This tests the 16to8 fifo, which allows us to enqueue two characters
+ * at a time into the tx fifo, perfect for hexdumps.
  */
-`include "util.v"
-`include "spram.v"
-`include "uart.v"
+`include "../common/util.v"
+`include "../common/uart.v"
+`include "../common/spram.v"
 
 module top(
 	output led_r,
@@ -20,7 +19,7 @@ module top(
 	output serial_txd,
 	input serial_rxd,
 	output spi_cs,
-	output gpio_2
+	output gpio_2,
 );
 	assign spi_cs = 1; // it is necessary to turn off the SPI flash chip
 	wire debug0 = gpio_2;
@@ -81,10 +80,10 @@ module top(
 	reg fifo_read_strobe;
 	wire fifo_available;
 
-	fifo_spram buffer(
+	fifo_spram_16to8 buffer(
 		.clk(clk_48),
 		.reset(reset),
-		.write_data(uart_rxd),
+		.write_data({ hexdigit(uart_rxd[7:4]), hexdigit(uart_rxd[3:0]) }),
 		.write_strobe(uart_rxd_strobe),
 		.data_available(fifo_available),
 		.read_data(uart_txd),
@@ -101,7 +100,6 @@ module top(
 		&&  uart_txd_ready
 		&& !uart_rxd_strobe
 		&& !uart_txd_strobe
-		&&  counter[18:0] == 0
 		) begin
 			fifo_read_strobe <= 1;
 			uart_txd_strobe <= 1;

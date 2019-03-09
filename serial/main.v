@@ -11,10 +11,13 @@
  *
  * The USB port will have to be cycled to get the FTDI to renumerate as
  * /dev/ttyUSB0.  Not sure what is going on with iceprog.
+ *
+ * to attach: screen /dev/ttyUSB0 1000000 (`ctrl-a k` to kill)
  */
-`include "util.v"
-`include "uart.v"
+`include "../common/util.v"
+`include "../common/uart.v"
 
+(* top *)
 module top(
 	output led_r,
 	output led_g,

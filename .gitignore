@@ -6,3 +6,4 @@
 pll_*.v
 *.json
 .*.d
+.sconsign.dblite
