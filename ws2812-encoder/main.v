@@ -48,23 +48,42 @@ module top(
     );
 
   wire [7:0] count;
-
   assign encoder_c = 1;
-  quaddec #(.BITS(8)) decoder(
+
+  wire encoder_a_db, encoder_b_db;
+  wire encoder_a_rise, encoder_b_rise;
+  wire encoder_a_fall, encoder_b_fall;
+
+  debounce_bc #(.width(2),.bounce_limit(300000)) bnc(
     .clk(clk_48),
-    .A(encoder_a),
-    .B(encoder_b),
+    .switch_in({ encoder_a, encoder_b }),
+    .switch_out({ encoder_a_db, encoder_b_db }),
+    .switch_rise({ encoder_a_rise, encoder_b_rise }),
+    .switch_fall({ encoder_a_fall, encoder_b_fall })
+  );
+
+  quaddec_f4f #(.BITS(8)) decoder(
+    .clk(clk_48),
+    .A(encoder_a_db),
+    .B(encoder_b_db),
     .count(count)
   );
 
-  assign selection = count[2:0];
+ /*
+ quaddec_dk decoder(
+   .clk(clk_48),
+   .a(encoder_a),
+   .b(encoder_b),
+   .count(count)
+ );
+ */
 
   reg [31:0] counter;
   always @ (posedge clk_48)
     counter <= counter + 1;
 
-  //always @ (posedge new_address)
-  //  red = address == new_address
+  assign selection = count[2:0];
+
   assign red = address == selection ? 8'h06 : 0;
   assign green = address == selection ? 0 : 8'h06;
   assign blue = 0;
@@ -73,8 +92,23 @@ module top(
     reset <= counter[20];
 endmodule
 
-// https://www.digikey.com/eewiki/pages/viewpage.action?pageId=62259228
 // https://www.beyond-circuits.com/wordpress/tutorial/tutorial12/
+module quaddec_bc (
+  input clk,
+  input a_rise,
+  input b,
+  output reg [7:0] count
+);
+  reg [7:0] enc_byte = 0;
+
+  always @(posedge clk)
+    if (a_rise)
+      if (!b) count <= count - 1;
+      else count <= count + 1;
+endmodule
+
+// https://www.digikey.com/eewiki/pages/viewpage.action?pageId=62259228
+
 // http://www.lothar-miller.de/s9y/categories/46-Encoder
 /*
   wire [1:0] hin = {A, B};
@@ -93,7 +127,7 @@ endmodule
 */
 
 // https://www.fpga4fun.com/QuadratureDecoder.html
-module quaddec
+module quaddec_f4f
   #(
     parameter BITS = 8
   )

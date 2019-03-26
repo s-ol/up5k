@@ -4,9 +4,9 @@ set_io -nowarn led_r 41
 set_io -nowarn led_g 39
 set_io -nowarn led_b 40
 
-set_io -nowarn encoder_a 13
-set_io -nowarn encoder_c 18
-set_io -nowarn encoder_b 19
+set_io -nowarn encoder_a 46
+set_io -nowarn encoder_c 47
+set_io -nowarn encoder_b 45
 
 set_io -nowarn led_rgb 23
 

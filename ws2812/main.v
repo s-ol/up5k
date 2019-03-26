@@ -6,7 +6,8 @@
 `include "../common/ws2812c.v"
 
 (* top *)
-module top(
+module top
+(
   output led_rgb
 );
   wire clk_48;
@@ -20,14 +21,20 @@ module top(
 
   wire [2:0] address;
   wire new_address;
-  reg [7:0] red;
-  wire [7:0] green;
-  wire [7:0] blue;
+
+  wire [7:0] red, green, blue;
+
+  wire [23:0] rgb;
+  pwm_dim #(.WIDTH(24), .CYCLE(15)) dimmer(
+    .clk(counter[15]),
+    .in({red, green, blue}),
+    .out(rgb)
+  );
 
   ws2812c
     #(
       .NUM_LEDS(8),
-      .SYSTEM_CLOCK(48000000),
+      .SYSTEM_CLOCK(48_000_000),
     ) driver
     (
       .clk(clk_48),
@@ -35,9 +42,9 @@ module top(
 
       .address(address),
       .new_address(new_address),
-      .red_in(red),
-      .green_in(green),
-      .blue_in(blue),
+      .red_in  (rgb[ 7: 0]),
+      .green_in(rgb[15: 8]),
+      .blue_in (rgb[23:16]),
 
       .DO(led_rgb)
     );
@@ -46,26 +53,23 @@ module top(
   always @ (posedge clk_48)
     counter <= counter + 1;
 
-  initial begin
-    reset = 0;
-    //green[7:4] = 0;
-  end
-
-  always @ (posedge new_address)
-    red = 7 << (address >> 2);
-
-  triwave#(.BITS(4)) grn(
+  triwave grn(
     .clk(counter[18]),
-    .out(green[3:0])
+    .out(green)
   );
 
-  triwave#(.BITS(4)) blu(
+  triwave blu(
     .clk(counter[19]),
-    .out(blue[3:0])
+    .out(blue)
   );
 
-  always @ (posedge counter[19])
-    reset <= counter[20];
+  triwave rd(
+    .clk(counter[17]),
+    .out(red)
+  );
+
+  always @ (posedge counter[14])
+    reset <= counter[15];
 endmodule
 
 module triwave
