@@ -10,6 +10,8 @@ module top(
   input encoder_a,
   input encoder_b,
   output encoder_c,
+  output gpio_3,
+  output gpio_44,
   output led_rgb
 );
   wire clk_48;
@@ -48,41 +50,24 @@ module top(
     );
 
   wire [7:0] count;
+
+  // pull-downs
+  assign gpio_3 = 0;
+  assign gpio_44 = 0;
   assign encoder_c = 1;
-
-  wire encoder_a_db, encoder_b_db;
-  wire encoder_a_rise, encoder_b_rise;
-  wire encoder_a_fall, encoder_b_fall;
-
-  debounce_bc #(.width(2),.bounce_limit(300000)) bnc(
-    .clk(clk_48),
-    .switch_in({ encoder_a, encoder_b }),
-    .switch_out({ encoder_a_db, encoder_b_db }),
-    .switch_rise({ encoder_a_rise, encoder_b_rise }),
-    .switch_fall({ encoder_a_fall, encoder_b_fall })
-  );
 
   quaddec_f4f #(.BITS(8)) decoder(
     .clk(clk_48),
-    .A(encoder_a_db),
-    .B(encoder_b_db),
+    .A(encoder_a),
+    .B(encoder_b),
     .count(count)
   );
-
- /*
- quaddec_dk decoder(
-   .clk(clk_48),
-   .a(encoder_a),
-   .b(encoder_b),
-   .count(count)
- );
- */
 
   reg [31:0] counter;
   always @ (posedge clk_48)
     counter <= counter + 1;
 
-  assign selection = count[2:0];
+  assign selection = count[4:2];
 
   assign red = address == selection ? 8'h06 : 0;
   assign green = address == selection ? 0 : 8'h06;
@@ -91,23 +76,6 @@ module top(
   always @ (posedge counter[19])
     reset <= counter[20];
 endmodule
-
-// https://www.beyond-circuits.com/wordpress/tutorial/tutorial12/
-module quaddec_bc (
-  input clk,
-  input a_rise,
-  input b,
-  output reg [7:0] count
-);
-  reg [7:0] enc_byte = 0;
-
-  always @(posedge clk)
-    if (a_rise)
-      if (!b) count <= count - 1;
-      else count <= count + 1;
-endmodule
-
-// https://www.digikey.com/eewiki/pages/viewpage.action?pageId=62259228
 
 // http://www.lothar-miller.de/s9y/categories/46-Encoder
 /*

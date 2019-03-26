@@ -1,4 +1,4 @@
-
+// https://www.digikey.com/eewiki/pages/viewpage.action?pageId=62259228
 module quaddec_dk
   #(
     parameter debounce_time = 65536

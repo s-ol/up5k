@@ -1,4 +1,17 @@
 // https://www.beyond-circuits.com/wordpress/wp-content/uploads/tutorials/tutorial11/debounce.v
+/*
+  wire encoder_a_db, encoder_b_db;
+  wire encoder_a_rise, encoder_b_rise;
+  wire encoder_a_fall, encoder_b_fall;
+
+  debounce_bc #(.width(2),.bounce_limit(300000)) bnc(
+    .clk(clk_48),
+    .switch_in({ encoder_a, encoder_b }),
+    .switch_out({ encoder_a_db, encoder_b_db }),
+    .switch_rise({ encoder_a_rise, encoder_b_rise }),
+    .switch_fall({ encoder_a_fall, encoder_b_fall })
+  );
+*/
 module debounce_bc
   #(
     parameter width = 1,
@@ -37,4 +50,19 @@ module debounce_bc
           end
       end
   endgenerate
+endmodule
+
+// https://www.beyond-circuits.com/wordpress/tutorial/tutorial12/
+module quaddec_bc (
+  input clk,
+  input a_rise,
+  input b,
+  output reg [7:0] count
+);
+  reg [7:0] enc_byte = 0;
+
+  always @(posedge clk)
+    if (a_rise)
+      if (!b) count <= count - 1;
+      else count <= count + 1;
 endmodule
