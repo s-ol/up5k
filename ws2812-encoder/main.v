@@ -9,9 +9,7 @@
 module top(
   input encoder_a,
   input encoder_b,
-  output encoder_c,
-  output gpio_3,
-  output gpio_44,
+  input encoder_sw,
   output led_rgb
 );
   wire clk_48;
@@ -51,11 +49,6 @@ module top(
 
   wire [7:0] count;
 
-  // pull-downs
-  assign gpio_3 = 0;
-  assign gpio_44 = 0;
-  assign encoder_c = 1;
-
   quaddec_f4f #(.BITS(8)) decoder(
     .clk(clk_48),
     .A(encoder_a),
@@ -69,30 +62,67 @@ module top(
 
   assign selection = count[4:2];
 
-  assign red = address == selection ? 8'h06 : 0;
-  assign green = address == selection ? 0 : 8'h06;
-  assign blue = 0;
+  wire [7:0] bright;
+
+  fade f(
+    .count(count),
+    .address(address),
+    .brightness(bright)
+  );
+
+  reg [1:0] choice;
+
+  rgb_sel s(
+    .in(bright),
+    .choice(choice),
+    .rgb({red, green, blue})
+  );
+
+  reg [2:0] sw_delay;
+  always @ (posedge counter[15]) begin
+    sw_delay <= {sw_delay[1:0], encoder_sw};
+
+    if (sw_delay[0] && sw_delay[1] && !sw_delay[2])
+      choice <= choice + 1;
+  end
 
   always @ (posedge counter[19])
     reset <= counter[20];
 endmodule
 
-// http://www.lothar-miller.de/s9y/categories/46-Encoder
-/*
-  wire [1:0] hin = {A, B};
-  reg [1:0] smid, efin;
+// fade between 0 and 1
+module fade
+  (
+    input [7:0] count,
+    input [2:0] address,
+    output reg [7:0] brightness
+  );
 
-  always @ (posedge clk) begin
-    smiddelay <= hin;
-    efin <= smid;
+  wire [7:0] thresh;
+
+  assign thresh = {address, 5'h0};
+  always @ * begin
+    if (count < thresh) brightness <= 8'h0;
+    else if (count < thresh + 'h3f) brightness <= count - thresh;
+    else brightness <= 'h3f;
   end
+endmodule
 
-  reg i 
+module rgb_sel
+  (
+    input [7:0] in,
+    input [1:0] choice,
+    output reg [23:0] rgb
+  );
 
-  always @ (posedge clk) begin
-    i = 0 & efin[0];
-    i = (i ^ e[1]) & e[1];
-*/
+  always @ *
+    case (choice)
+      0 : rgb <= 0;
+      1 : rgb <= { in, 8'h0, 8'h0 };
+      2 : rgb <= { 8'h0, in, 8'h0 };
+      3 : rgb <= { 8'h0, 8'h0, in };
+    endcase
+endmodule
 
 // https://www.fpga4fun.com/QuadratureDecoder.html
 module quaddec_f4f
@@ -115,8 +145,10 @@ module quaddec_f4f
 
   always @ (posedge clk) begin
     if (count_en) begin
-      if (count_dir)  count <= count + 1;
-      else            count <= count - 1;
+      // if (count_dir)  count <= count + 1;
+      // else            count <= count - 1;
+      if (count_dir && count < {BITS{1'b1}}) count <= count + 1;
+      else if (count > 0)                    count <= count - 1;
     end
   end
 endmodule

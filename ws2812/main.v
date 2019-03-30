@@ -25,7 +25,7 @@ module top
   wire [7:0] red, green, blue;
 
   wire [23:0] rgb;
-  pwm_dim #(.WIDTH(24), .CYCLE(15)) dimmer(
+  pwm_dim #(.WIDTH(24), .CYCLE(8)) dimmer(
     .clk(counter[15]),
     .in({red, green, blue}),
     .out(rgb)

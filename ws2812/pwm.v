@@ -2,7 +2,7 @@ module pwm_dim
   #(
     parameter WIDTH = 8,
     parameter ON = 1,
-    parameter CYCLE = 8
+    parameter CYCLE = 2
   )
   (
     input clk,
