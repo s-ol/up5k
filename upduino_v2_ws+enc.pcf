@@ -7,6 +7,7 @@ set_io -nowarn led_b 40
 set_io -nowarn encoder_a 37
 set_io -nowarn encoder_b 31
 set_io -nowarn encoder_sw 35
+set_io -nowarn encoder_cap 32
 
 set_io -nowarn led_rgb 28
 
