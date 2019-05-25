@@ -23,7 +23,6 @@ module top(
 
   wire [2:0] address;
   wire new_address;
-  wire [2:0] selection;
 
   wire [7:0] red;
   wire [7:0] green;
@@ -59,8 +58,6 @@ module top(
   reg [31:0] counter;
   always @ (posedge clk_48)
     counter <= counter + 1;
-
-  assign selection = count[4:2];
 
   wire [7:0] bright;
 
